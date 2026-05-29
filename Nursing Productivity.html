@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Add Patient Visit Record — MCH</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --blue: #0F5AA5;
+    --pink: #E10F78;
+    --bg: #F4F7FB;
+    --white: #FFFFFF;
+    --text: #1A2332;
+    --text-muted: #6B7A8D;
+    --border: #DDE5EF;
+    --success: #12B76A;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+  }
+
+  .card {
+    background: var(--white);
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 24px rgba(15,90,165,0.10);
+    width: 100%;
+    max-width: 780px;
+    overflow: hidden;
+  }
+
+  .card-header {
+    background: linear-gradient(135deg, #0F5AA5 0%, #1a7fd4 100%);
+    padding: 22px 28px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .card-header h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: white;
+    letter-spacing: -0.3px;
+  }
+
+  .card-body { padding: 28px; }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+    margin-bottom: 18px;
+  }
+
+  .form-group { display: flex; flex-direction: column; gap: 7px; }
+  .form-group label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
+  .form-group input,
+  .form-group select {
+    padding: 11px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 9px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    background: var(--white);
+    outline: none;
+    transition: all 0.2s;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  .form-group input:focus,
+  .form-group select:focus {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(15,90,165,0.10);
+  }
+  .form-group input[type="number"] {
+    font-family: 'DM Mono', monospace;
+  }
+  .form-group input::placeholder { color: #B0BBCA; }
+
+  .full-width { grid-column: 1 / -1; }
+
+  .btn-row {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+    align-items: center;
+  }
+  .btn {
+    padding: 12px 28px;
+    border-radius: 9px;
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .btn-primary {
+    background: var(--blue);
+    color: white;
+    box-shadow: 0 2px 10px rgba(15,90,165,0.25);
+  }
+  .btn-primary:hover {
+    background: #0d4e8f;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(15,90,165,0.32);
+  }
+  .btn-outline {
+    background: transparent;
+    color: var(--blue);
+    border: 1.5px solid var(--blue);
+  }
+  .btn-outline:hover { background: #E8F1FB; }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    background: var(--success);
+    color: white;
+    padding: 13px 22px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all 0.3s;
+    z-index: 999;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  /* Records list below */
+  .records-wrap {
+    width: 100%;
+    max-width: 780px;
+    margin-top: 20px;
+  }
+  .records-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 10px;
+    padding: 0 4px;
+  }
+  .record-item {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 13px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+    box-shadow: 0 1px 4px rgba(15,90,165,0.06);
+    flex-wrap: wrap;
+  }
+  .ri-dept {
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .dept-OPD { background: #DBEAFE; color: #1D4ED8; }
+  .dept-ER  { background: #FEE2E2; color: #DC2626; }
+  .dept-IPD { background: #D1FAE5; color: #065F46; }
+  .dept-ICU { background: #EDE9FE; color: #5B21B6; }
+  .dept-VAC { background: #FEF3C7; color: #92400E; }
+  .ri-name { font-weight: 600; font-size: 13px; flex: 1; }
+  .ri-pos { font-size: 12px; color: var(--text-muted); }
+  .ri-visits {
+    font-family: 'DM Mono', monospace;
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--blue);
+    min-width: 40px;
+    text-align: right;
+  }
+  .ri-date { font-size: 11px; color: var(--text-muted); font-family: 'DM Mono',monospace; }
+  .ri-del {
+    background: #FEE2E2; color: #DC2626;
+    border: none; border-radius: 6px;
+    padding: 4px 10px; font-size: 12px; cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .ri-del:hover { background: #FCA5A5; }
+  .empty-state {
+    text-align: center; color: var(--text-muted);
+    font-size: 13px; padding: 20px;
+  }
+
+  @media (max-width: 600px) {
+    .form-grid { grid-template-columns: 1fr 1fr; }
+    .card-body { padding: 20px; }
+  }
+  @media (max-width: 400px) {
+    .form-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div style="display:flex;flex-direction:column;align-items:center;width:100%;max-width:840px;">
+
+  <div class="card">
+    <div class="card-header">
+      <span style="font-size:22px">✏️</span>
+      <h2>Add Patient Visit Record</h2>
+    </div>
+    <div class="card-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Date</label>
+          <input type="date" id="rec_date">
+        </div>
+        <div class="form-group">
+          <label>Department</label>
+          <select id="rec_dept" onchange="updateSuggestions()">
+            <option value="">— Select Dept —</option>
+            <option value="OPD">OPD</option>
+            <option value="ER">ER</option>
+            <option value="IPD">IPD</option>
+            <option value="ICU">ICU</option>
+            <option value="Vaccination">Vaccination</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Staff Name</label>
+          <input type="text" id="rec_name" placeholder="e.g. Sophea Chan" list="staffList">
+          <datalist id="staffList"></datalist>
+        </div>
+        <div class="form-group">
+          <label>Position</label>
+          <select id="rec_position">
+            <option value="">— Select Position —</option>
+            <option value="Lead Team">Lead Team</option>
+            <option value="Register Nurse">Register Nurse</option>
+            <option value="Assistant Nurse">Assistant Nurse</option>
+            <option value="Admin">Admin</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Patient Visits</label>
+          <input type="number" id="rec_visits" min="0" max="999" placeholder="0">
+        </div>
+
+        <div class="form-group full-width">
+          <label>Notes (optional)</label>
+          <input type="text" id="rec_notes" placeholder="Any notes...">
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="saveRecord()">✅ Save Record</button>
+        <button class="btn btn-outline" onclick="clearForm()">🔄 Clear</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Records List -->
+  <div class="records-wrap">
+    <div class="records-title">Today's Records (<span id="recCount">0</span>)</div>
+    <div id="recordsList"></div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  let records = JSON.parse(localStorage.getItem('mch_rec_v2') || '[]');
+
+  const staffDB = {
+    OPD: ['Sophea Chan','Bopha Ros','Dara Keo'],
+    ER:  ['Dara Kim','Rina Lim','Sokha Prum'],
+    IPD: ['Pich Sov','Mealea Heng','Chenda Prak'],
+    ICU: ['Kosal Vong','Lina Sok','Bora Nhem'],
+    Vaccination: ['Chenda Prak','Srey Mom','Pisach Ty']
+  };
+
+  // Init date
+  document.getElementById('rec_date').value = new Date().toISOString().split('T')[0];
+
+  function updateSuggestions() {
+    const dept = document.getElementById('rec_dept').value;
+    const dl = document.getElementById('staffList');
+    const names = staffDB[dept] || [];
+    dl.innerHTML = names.map(n => `<option value="${n}">`).join('');
+  }
+
+  const GAS_URL = 'https://script.google.com/macros/s/AKfycbz4YuTE_OKZE2ebPU9lEY693on3PGtkksbAz8U8QamnO09rHVqBFoau6Gvc5yZojmKw/exec';
+
+  async function saveRecord() {
+    const date     = document.getElementById('rec_date').value;
+    const dept     = document.getElementById('rec_dept').value;
+    const name     = document.getElementById('rec_name').value.trim();
+    const position = document.getElementById('rec_position').value;
+    const visits   = parseInt(document.getElementById('rec_visits').value) || 0;
+    const notes    = document.getElementById('rec_notes').value.trim();
+
+    if (!date || !dept || !name || !position) {
+      showToast('⚠️ Please fill all required fields', '#DC2626'); return;
+    }
+
+    // Save locally
+    records.unshift({ id: Date.now(), date, dept, name, position, visits, notes });
+    localStorage.setItem('mch_rec_v2', JSON.stringify(records));
+    renderList();
+    clearForm();
+
+    // Send to Google Sheet
+    showToast('⏳ Saving to Google Sheet...', '#F79009');
+    try {
+      const params = new URLSearchParams({ date, dept, name, position, visits, notes });
+      await fetch(GAS_URL + '?' + params.toString(), { method: 'GET', mode: 'no-cors' });
+      showToast('✅ Saved to Google Sheet!', '#12B76A');
+    } catch (err) {
+      showToast('⚠️ Local saved. Sheet sync failed.', '#DC2626');
+    }
+  }
+
+  function clearForm() {
+    document.getElementById('rec_dept').value = '';
+    document.getElementById('rec_position').value = '';
+
+    document.getElementById('rec_name').value = '';
+    document.getElementById('rec_visits').value = '';
+    document.getElementById('rec_notes').value = '';
+    document.getElementById('rec_date').value = new Date().toISOString().split('T')[0];
+  }
+
+  function deleteRecord(id) {
+    records = records.filter(r => r.id !== id);
+    localStorage.setItem('mch_rec_v2', JSON.stringify(records));
+    renderList();
+    showToast('🗑️ Deleted', '#6B7A8D');
+  }
+
+  function renderList() {
+    const today = new Date().toISOString().split('T')[0];
+    const todayRecs = records.filter(r => r.date === today);
+    document.getElementById('recCount').textContent = todayRecs.length;
+
+    const container = document.getElementById('recordsList');
+    if (!todayRecs.length) {
+      container.innerHTML = '<div class="empty-state">No records today yet</div>';
+      return;
+    }
+    container.innerHTML = todayRecs.map(r => {
+      const deptCls = r.dept === 'Vaccination' ? 'dept-VAC' : 'dept-'+r.dept;
+      return `
+        <div class="record-item">
+          <span class="ri-dept ${deptCls}">${r.dept}</span>
+          <span class="ri-name">${r.name}</span>
+          <span class="ri-pos">${r.position}</span>
+          <span class="ri-visits">${r.visits}</span>
+          <button class="ri-del" onclick="deleteRecord(${r.id})">✕</button>
+        </div>`;
+    }).join('');
+  }
+
+  function showToast(msg, bg = '#12B76A') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.style.background = bg;
+    t.className = 'toast show';
+    setTimeout(() => t.className = 'toast', 2500);
+  }
+
+  renderList();
+</script>
+</body>
+</html>
